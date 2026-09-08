@@ -1,0 +1,8 @@
+# GMSurvivors Essentials Configuration
+# Player home locations will automatically save below.
+homes: {}
+
+messages:
+  # {coords} is replaced with the player's death coordinates (x, y, z).
+  # '&' color codes are supported.
+  death-message: "You died at {coords}. Type /back to teleport to your death coordinates."

@@ -1,0 +1,63 @@
+name: GMSEssentials
+version: '0.1.0-beta'
+main: com.schlero.gmsessentials.GmsePlugin
+api-version: '26.1'
+description: A free and open source plugin that adds essential things to your server.
+commands:
+  size:
+    description: Change a player's scale attribute.
+    usage: /size [player] <scale>
+    permission: gmse.admin
+  gms:
+    description: Shortcut for Survival mode.
+    usage: /gms [player]
+    permission: gmse.admin
+  gmc:
+    description: Shortcut for Creative mode.
+    usage: /gmc [player]
+    permission: gmse.admin
+  gma:
+    description: Shortcut for Adventure mode.
+    usage: /gma [player]
+    permission: gmse.admin
+  gmsp:
+    description: Shortcut for Spectator mode.
+    usage: /gmsp [player]
+    permission: gmse.admin
+  sethome:
+    description: Sets your home location.
+    usage: /sethome
+  home:
+    description: Teleports you to your home location.
+    usage: /home
+  invsee:
+    description: Inspect and manage another player's inventory.
+    usage: /invsee <player>
+    permission: gmse.admin
+  fly:
+    description: Toggle fly ability for yourself or another player.
+    usage: /fly [player]
+    permission: gmse.admin
+  back:
+    description: Teleports you to your last death location.
+    usage: /back
+  gmse:
+    description: GMSEssentials management command.
+    usage: /gmse reload
+    permission: gmse.admin
+  tpa:
+    description: Request to teleport to another player.
+    usage: /tpa <player>
+  tpahere:
+    description: Request that another player teleports to you.
+    usage: /tpahere <player>
+  tpaccept:
+    description: Accept a pending teleport request.
+    usage: /tpaccept
+  tpacancel:
+    description: Cancel a pending teleport request.
+    usage: /tpacancel
+permissions:
+  gmse.admin:
+    description: Allows access to administrative commands in GMSEssentials.
+    default: op
