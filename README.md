@@ -58,7 +58,7 @@
 
 | Command | Description | Permission | 
  | ----- | ----- | ----- | 
-| `/invsee <player>` | View and manage a player's inventory | `ggmse.admin` | 
+| `/invsee <player>` | View and manage a player's inventory | `gmse.admin` | 
 | `/fly [player]` | Toggle flight mode for yourself or others | `gmse.admin` | 
 | `/size <player> <scale>` | Change a player's scale attribute *(1.20.5+)* | `gmse.admin` | 
 
