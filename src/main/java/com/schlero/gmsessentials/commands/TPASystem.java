@@ -1,20 +1,30 @@
 package com.schlero.gmsessentials.commands;
 
 import com.schlero.gmsessentials.GmsePlugin;
+import io.papermc.paper.command.brigadier.BasicCommand;
+import io.papermc.paper.command.brigadier.CommandSourceStack;
+import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.format.NamedTextColor;
 import org.bukkit.Bukkit;
-import org.bukkit.ChatColor;
 import org.bukkit.Sound;
-import org.bukkit.command.Command;
-import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 import org.bukkit.scheduler.BukkitTask;
 
+import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
 
-public class TPASystem implements CommandExecutor {
+public class TPASystem {
+
+    public enum Action {
+        TPA,
+        TPAHERE,
+        ACCEPT,
+        CANCEL
+    }
 
     private enum RequestType {
         TPA,     // requester wants to teleport to target
@@ -42,45 +52,54 @@ public class TPASystem implements CommandExecutor {
         this.plugin = plugin;
     }
 
-    @Override
-    public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
-        if (!(sender instanceof Player)) {
-            sender.sendMessage(ChatColor.RED + "Only players can use this command.");
-            return true;
+    public BasicCommand command(Action action) {
+        return new BasicCommand() {
+            @Override
+            public void execute(CommandSourceStack source, String[] args) {
+                handle(source, args, action);
+            }
+
+            @Override
+            public Collection<String> suggest(CommandSourceStack source, String[] args) {
+                if ((action == Action.TPA || action == Action.TPAHERE) && args.length <= 1) {
+                    return CommandSuggestions.players(args);
+                }
+                return Collections.emptyList();
+            }
+        };
+    }
+
+    public void handle(CommandSourceStack source, String[] args, Action action) {
+        CommandSender sender = source.getSender();
+
+        if (!(sender instanceof Player player)) {
+            sender.sendMessage(Component.text("Only players can use this command.", NamedTextColor.RED));
+            return;
         }
 
-        Player player = (Player) sender;
-        String cmd = command.getName().toLowerCase();
-
-        switch (cmd) {
-            case "tpa":
-                return handleTpa(player, args, RequestType.TPA);
-            case "tpahere":
-                return handleTpa(player, args, RequestType.TPAHERE);
-            case "tpaccept":
-                return handleAccept(player);
-            case "tpacancel":
-                return handleCancel(player);
-            default:
-                return false;
+        switch (action) {
+            case TPA -> handleTpa(player, args, RequestType.TPA);
+            case TPAHERE -> handleTpa(player, args, RequestType.TPAHERE);
+            case ACCEPT -> handleAccept(player);
+            case CANCEL -> handleCancel(player);
         }
     }
 
-    private boolean handleTpa(Player requester, String[] args, RequestType type) {
+    private void handleTpa(Player requester, String[] args, RequestType type) {
         if (args.length < 1) {
-            requester.sendMessage(ChatColor.WHITE + "Usage: /" + (type == RequestType.TPA ? "tpa" : "tpahere") + " <player>");
-            return true;
+            requester.sendMessage(Component.text("Usage: /" + (type == RequestType.TPA ? "tpa" : "tpahere") + " <player>", NamedTextColor.WHITE));
+            return;
         }
 
-        Player target = Bukkit.getPlayer(args[0]);
+        Player target = Bukkit.getPlayerExact(args[0]);
         if (target == null) {
-            requester.sendMessage(ChatColor.RED + "Player not found.");
-            return true;
+            requester.sendMessage(Component.text("Player not found.", NamedTextColor.RED));
+            return;
         }
 
         if (target.equals(requester)) {
-            requester.sendMessage(ChatColor.RED + "You cannot send a teleport request to yourself.");
-            return true;
+            requester.sendMessage(Component.text("You cannot send a teleport request to yourself.", NamedTextColor.RED));
+            return;
         }
 
         // Cancel any existing request already pending on this target.
@@ -88,29 +107,26 @@ public class TPASystem implements CommandExecutor {
 
         BukkitTask timeoutTask = Bukkit.getScheduler().runTaskLater(plugin, () -> {
             pendingRequests.remove(target.getUniqueId());
-            requester.sendMessage(ChatColor.WHITE + "Your teleport request to " + target.getName() + " has expired.");
-            target.sendMessage(ChatColor.WHITE + "The teleport request from " + requester.getName() + " has expired.");
+            requester.sendMessage(Component.text("Your teleport request to " + target.getName() + " has expired.", NamedTextColor.WHITE));
+            target.sendMessage(Component.text("The teleport request from " + requester.getName() + " has expired.", NamedTextColor.WHITE));
         }, TIMEOUT_SECONDS * 20L);
 
         pendingRequests.put(target.getUniqueId(), new Request(requester.getUniqueId(), type, timeoutTask));
 
+        requester.sendMessage(Component.text("Teleport request sent to " + target.getName() + ".", NamedTextColor.WHITE));
         if (type == RequestType.TPA) {
-            requester.sendMessage(ChatColor.WHITE + "Teleport request sent to " + target.getName() + ".");
-            target.sendMessage(ChatColor.WHITE + requester.getName() + " has requested to teleport to you. Type /tpaccept or /tpacancel.");
+            target.sendMessage(Component.text(requester.getName() + " has requested to teleport to you. Type /tpaccept or /tpacancel.", NamedTextColor.WHITE));
         } else {
-            requester.sendMessage(ChatColor.WHITE + "Teleport request sent to " + target.getName() + ".");
-            target.sendMessage(ChatColor.WHITE + requester.getName() + " has requested that you teleport to them. Type /tpaccept or /tpacancel.");
+            target.sendMessage(Component.text(requester.getName() + " has requested that you teleport to them. Type /tpaccept or /tpacancel.", NamedTextColor.WHITE));
         }
-
-        return true;
     }
 
-    private boolean handleAccept(Player target) {
+    private void handleAccept(Player target) {
         Request request = pendingRequests.get(target.getUniqueId());
 
         if (request == null) {
-            target.sendMessage(ChatColor.RED + "You have no pending teleport requests.");
-            return true;
+            target.sendMessage(Component.text("You have no pending teleport requests.", NamedTextColor.RED));
+            return;
         }
 
         Player requester = Bukkit.getPlayer(request.requesterId);
@@ -118,41 +134,43 @@ public class TPASystem implements CommandExecutor {
         pendingRequests.remove(target.getUniqueId());
 
         if (requester == null || !requester.isOnline()) {
-            target.sendMessage(ChatColor.RED + "That player is no longer online.");
-            return true;
+            target.sendMessage(Component.text("That player is no longer online.", NamedTextColor.RED));
+            return;
         }
 
         if (request.type == RequestType.TPA) {
-            requester.teleport(target.getLocation());
-            requester.playSound(requester.getLocation(), Sound.ENTITY_ENDERMAN_TELEPORT, 1.0f, 1.0f);
+            requester.teleportAsync(target.getLocation()).thenAccept(success -> {
+                if (success) {
+                    requester.playSound(requester.getLocation(), Sound.ENTITY_ENDERMAN_TELEPORT, 1.0f, 1.0f);
+                }
+            });
         } else {
-            target.teleport(requester.getLocation());
-            target.playSound(target.getLocation(), Sound.ENTITY_ENDERMAN_TELEPORT, 1.0f, 1.0f);
+            target.teleportAsync(requester.getLocation()).thenAccept(success -> {
+                if (success) {
+                    target.playSound(target.getLocation(), Sound.ENTITY_ENDERMAN_TELEPORT, 1.0f, 1.0f);
+                }
+            });
         }
 
-        target.sendMessage(ChatColor.WHITE + "Teleport request accepted.");
-        requester.sendMessage(ChatColor.WHITE + target.getName() + " accepted your teleport request.");
-
-        return true;
+        target.sendMessage(Component.text("Teleport request accepted.", NamedTextColor.WHITE));
+        requester.sendMessage(Component.text(target.getName() + " accepted your teleport request.", NamedTextColor.WHITE));
     }
 
-    private boolean handleCancel(Player target) {
+    private void handleCancel(Player target) {
         Request request = pendingRequests.get(target.getUniqueId());
 
         if (request == null) {
-            target.sendMessage(ChatColor.RED + "You have no pending teleport requests.");
-            return true;
+            target.sendMessage(Component.text("You have no pending teleport requests.", NamedTextColor.RED));
+            return;
         }
 
         Player requester = Bukkit.getPlayer(request.requesterId);
         clearRequest(target.getUniqueId());
 
-        target.sendMessage(ChatColor.WHITE + "Teleport request cancelled.");
+        target.sendMessage(Component.text("Teleport request cancelled.", NamedTextColor.WHITE));
         if (requester != null && requester.isOnline()) {
-            requester.sendMessage(ChatColor.WHITE + target.getName() + " cancelled your teleport request.");
+            requester.sendMessage(Component.text(target.getName() + " cancelled your teleport request.", NamedTextColor.WHITE));
         }
-
-        return true;
     }
 
     private void clearRequest(UUID targetId) {

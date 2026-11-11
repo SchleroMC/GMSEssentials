@@ -1,6 +1,4 @@
-# GMSurvivors Essentials Configuration
-# Player home locations will automatically save below.
-homes: {}
+# GMSEssentials Configuration
 
 messages:
   # {coords} is replaced with the player's death coordinates (x, y, z).

@@ -1,0 +1,10 @@
+name: GMSEssentials
+version: '${project.version}'
+main: com.schlero.gmsessentials.GmsePlugin
+api-version: '26.1'
+description: A free and open source plugin that adds essential things to your server.
+defaultPerm: OP
+permissions:
+  gmse.admin:
+    description: Allows access to administrative commands in GMSEssentials.
+    default: op

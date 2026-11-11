@@ -1,64 +1,81 @@
 package com.schlero.gmsessentials.commands;
 
-import com.schlero.gmsessentials.GmsePlugin;
+import io.papermc.paper.command.brigadier.BasicCommand;
+import io.papermc.paper.command.brigadier.CommandSourceStack;
+import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.format.NamedTextColor;
 import org.bukkit.Bukkit;
-import org.bukkit.ChatColor;
 import org.bukkit.attribute.Attribute;
 import org.bukkit.attribute.AttributeInstance;
-import org.bukkit.command.Command;
-import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 
-public class SizeCommand implements CommandExecutor {
+import java.util.Collection;
+import java.util.Collections;
+
+public class SizeCommand implements BasicCommand {
 
     @Override
-    public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
+    public void execute(CommandSourceStack source, String[] args) {
+        CommandSender sender = source.getSender();
+
         if (args.length == 0) {
-            sender.sendMessage(ChatColor.RED + "Usage: /size [player] <scale> OR /size <scale>");
-            return true;
+            sender.sendMessage(Component.text("Usage: /size [player] <scale> OR /size <scale>", NamedTextColor.RED));
+            return;
         }
 
-        Player target = null;
-        double scale = 1.0;
+        Player target;
+        double scale;
 
         if (args.length == 1) {
-            if (!(sender instanceof Player)) {
-                sender.sendMessage(ChatColor.RED + "Console must specify a player: /size <player> <scale>");
-                return true;
+            if (!(sender instanceof Player player)) {
+                sender.sendMessage(Component.text("Console must specify a player: /size <player> <scale>", NamedTextColor.RED));
+                return;
             }
-            target = (Player) sender;
+            target = player;
             try {
                 scale = Double.parseDouble(args[0]);
             } catch (NumberFormatException e) {
-                sender.sendMessage(ChatColor.RED + "Invalid number format.");
-                return true;
+                sender.sendMessage(Component.text("Invalid number format.", NamedTextColor.RED));
+                return;
             }
         } else {
-            target = Bukkit.getPlayer(args[0]);
+            target = Bukkit.getPlayerExact(args[0]);
             if (target == null) {
-                sender.sendMessage(ChatColor.RED + "Player not found.");
-                return true;
+                sender.sendMessage(Component.text("Player not found.", NamedTextColor.RED));
+                return;
             }
             try {
                 scale = Double.parseDouble(args[1]);
             } catch (NumberFormatException e) {
-                sender.sendMessage(ChatColor.RED + "Invalid number format.");
-                return true;
+                sender.sendMessage(Component.text("Invalid number format.", NamedTextColor.RED));
+                return;
             }
         }
 
-        AttributeInstance attribute = target.getAttribute(Attribute.GENERIC_SCALE);
-        if (attribute != null) {
-            attribute.setBaseValue(scale);
-            sender.sendMessage(ChatColor.WHITE + "Set " + target.getName() + "'s scale to " + scale);
-            if (sender != target) {
-                target.sendMessage(ChatColor.WHITE + "Your scale was set to " + scale);
-            }
-        } else {
-            sender.sendMessage(ChatColor.RED + "Scale attribute is not supported on this entity.");
+        AttributeInstance attribute = target.getAttribute(Attribute.SCALE);
+        if (attribute == null) {
+            sender.sendMessage(Component.text("Scale attribute is not supported on this entity.", NamedTextColor.RED));
+            return;
         }
 
-        return true;
+        attribute.setBaseValue(scale);
+        sender.sendMessage(Component.text("Set " + target.getName() + "'s scale to " + scale, NamedTextColor.WHITE));
+        if (!sender.equals(target)) {
+            target.sendMessage(Component.text("Your scale was set to " + scale, NamedTextColor.WHITE));
+        }
+    }
+
+    @Override
+    public Collection<String> suggest(CommandSourceStack source, String[] args) {
+        if (args.length <= 1) {
+            return CommandSuggestions.players(args);
+        }
+        return Collections.emptyList();
+    }
+
+    @Override
+    public String permission() {
+        return "gmse.admin";
     }
 }

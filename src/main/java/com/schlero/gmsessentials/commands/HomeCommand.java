@@ -1,15 +1,14 @@
 package com.schlero.gmsessentials.commands;
 
 import com.schlero.gmsessentials.GmsePlugin;
-import org.bukkit.ChatColor;
+import io.papermc.paper.command.brigadier.CommandSourceStack;
+import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.format.NamedTextColor;
 import org.bukkit.Location;
 import org.bukkit.Sound;
-import org.bukkit.command.Command;
-import org.bukkit.command.CommandExecutor;
-import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 
-public class HomeCommand implements CommandExecutor {
+public class HomeCommand {
 
     private final GmsePlugin plugin;
 
@@ -17,36 +16,35 @@ public class HomeCommand implements CommandExecutor {
         this.plugin = plugin;
     }
 
-    @Override
-    public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
-        if (!(sender instanceof Player)) {
-            sender.sendMessage(ChatColor.RED + "Only players can use home commands.");
-            return true;
+    public void setHome(CommandSourceStack source) {
+        if (!(source.getSender() instanceof Player player)) {
+            source.getSender().sendMessage(Component.text("Only players can use home commands.", NamedTextColor.RED));
+            return;
         }
 
-        Player p = (Player) sender;
+        plugin.getHomeManager().setHome(player.getUniqueId(), player.getLocation());
+        player.sendMessage(Component.text("Home saved successfully.", NamedTextColor.WHITE));
+    }
 
-        if (command.getName().equalsIgnoreCase("sethome")) {
-            plugin.getConfig().set("homes." + p.getUniqueId().toString(), p.getLocation());
-            plugin.saveConfig();
-            p.sendMessage(ChatColor.WHITE + "Home saved successfully.");
-            return true;
+    public void teleportHome(CommandSourceStack source) {
+        if (!(source.getSender() instanceof Player player)) {
+            source.getSender().sendMessage(Component.text("Only players can use home commands.", NamedTextColor.RED));
+            return;
         }
 
-        if (command.getName().equalsIgnoreCase("home")) {
-            Location homeLoc = plugin.getConfig().getLocation("homes." + p.getUniqueId().toString());
+        Location homeLocation = plugin.getHomeManager().getHome(player.getUniqueId());
+        if (homeLocation == null) {
+            player.sendMessage(Component.text("You have not set a home yet! Use /sethome.", NamedTextColor.RED));
+            return;
+        }
 
-            if (homeLoc == null) {
-                p.sendMessage(ChatColor.RED + "You have not set a home yet! Use /sethome.");
-                return true;
+        player.teleportAsync(homeLocation).thenAccept(success -> {
+            if (success) {
+                player.playSound(player.getLocation(), Sound.ENTITY_ENDERMAN_TELEPORT, 1.0f, 1.0f);
+                player.sendMessage(Component.text("Teleported to your home.", NamedTextColor.WHITE));
+            } else {
+                player.sendMessage(Component.text("Could not teleport you to your home.", NamedTextColor.RED));
             }
-
-            p.teleport(homeLoc);
-            p.playSound(p.getLocation(), Sound.ENTITY_ENDERMAN_TELEPORT, 1.0f, 1.0f);
-            p.sendMessage(ChatColor.WHITE + "Teleported to your home.");
-            return true;
-        }
-
-        return false;
+        });
     }
 }

@@ -1,11 +1,12 @@
 package com.schlero.gmsessentials.commands;
 
 import com.schlero.gmsessentials.GmsePlugin;
+import io.papermc.paper.command.brigadier.BasicCommand;
+import io.papermc.paper.command.brigadier.CommandSourceStack;
+import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.format.NamedTextColor;
 import org.bukkit.Bukkit;
-import org.bukkit.ChatColor;
 import org.bukkit.Material;
-import org.bukkit.command.Command;
-import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
@@ -17,47 +18,69 @@ import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.PlayerInventory;
 import org.bukkit.inventory.meta.ItemMeta;
 
+import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
 
-public class InvseeCommand implements CommandExecutor, Listener {
+public class InvseeCommand implements BasicCommand, Listener {
 
+    private static final Material FILLER_MATERIAL = Material.GRAY_STAINED_GLASS_PANE;
+    private static final Component FILLER_NAME = Component.text(" ");
+
+    private final GmsePlugin plugin;
     // Track active Invsee sessions: Admin UUID -> Target UUID
     private final Map<UUID, UUID> activeSessions = new HashMap<>();
 
-    @Override
-    public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
-        if (!(sender instanceof Player)) {
-            sender.sendMessage(ChatColor.RED + "Only players can use /invsee.");
-            return true;
-        }
+    public InvseeCommand(GmsePlugin plugin) {
+        this.plugin = plugin;
+    }
 
-        Player admin = (Player) sender;
+    @Override
+    public void execute(CommandSourceStack source, String[] args) {
+        CommandSender sender = source.getSender();
+
+        if (!(sender instanceof Player admin)) {
+            sender.sendMessage(Component.text("Only players can use /invsee.", NamedTextColor.RED));
+            return;
+        }
 
         if (args.length == 0) {
-            admin.sendMessage(ChatColor.RED + "Usage: /invsee <player>");
-            return true;
+            admin.sendMessage(Component.text("Usage: /invsee <player>", NamedTextColor.RED));
+            return;
         }
 
-        Player target = Bukkit.getPlayer(args[0]);
+        Player target = Bukkit.getPlayerExact(args[0]);
 
         if (target == null) {
-            admin.sendMessage(ChatColor.RED + "Player not found.");
-            return true;
+            admin.sendMessage(Component.text("Player not found.", NamedTextColor.RED));
+            return;
         }
 
         if (target.equals(admin)) {
-            admin.sendMessage(ChatColor.RED + "You cannot invsee yourself.");
-            return true;
+            admin.sendMessage(Component.text("You cannot invsee yourself.", NamedTextColor.RED));
+            return;
         }
 
         openInvseeMenu(admin, target);
-        return true;
+    }
+
+    @Override
+    public Collection<String> suggest(CommandSourceStack source, String[] args) {
+        if (args.length <= 1) {
+            return CommandSuggestions.players(args);
+        }
+        return Collections.emptyList();
+    }
+
+    @Override
+    public String permission() {
+        return "gmse.admin";
     }
 
     public void openInvseeMenu(Player admin, Player target) {
-        String title = target.getName() + "'s Inventory";
+        Component title = Component.text(target.getName() + "'s Inventory");
         Inventory gui = Bukkit.createInventory(null, 54, title);
 
         PlayerInventory targetInv = target.getInventory();
@@ -73,10 +96,10 @@ public class InvseeCommand implements CommandExecutor, Listener {
         }
 
         // Filler Glass for slot formatting
-        ItemStack filler = new ItemStack(Material.GRAY_STAINED_GLASS_PANE);
+        ItemStack filler = new ItemStack(FILLER_MATERIAL);
         ItemMeta meta = filler.getItemMeta();
         if (meta != null) {
-            meta.setDisplayName(" ");
+            meta.displayName(FILLER_NAME);
             filler.setItemMeta(meta);
         }
 
@@ -85,7 +108,7 @@ public class InvseeCommand implements CommandExecutor, Listener {
             gui.setItem(i, filler);
         }
 
-        // Bottom row (Slots 45-53) layout matching the screenshot:
+        // Bottom row (Slots 45-53):
         // 45: Filler, 46: Filler, 47: Helmet, 48: Chestplate, 49: Filler, 50: Leggings, 51: Boots, 52: Offhand/Filler, 53: Filler
         gui.setItem(45, filler);
         gui.setItem(46, filler);
@@ -94,7 +117,9 @@ public class InvseeCommand implements CommandExecutor, Listener {
         gui.setItem(49, filler);
         gui.setItem(50, targetInv.getLeggings());
         gui.setItem(51, targetInv.getBoots());
-        gui.setItem(52, targetInv.getItemInOffHand() != null && targetInv.getItemInOffHand().getType() != Material.AIR ? targetInv.getItemInOffHand() : filler);
+
+        ItemStack offhand = targetInv.getItemInOffHand();
+        gui.setItem(52, offhand.getType() != Material.AIR ? offhand : filler);
         gui.setItem(53, filler);
 
         activeSessions.put(admin.getUniqueId(), target.getUniqueId());
@@ -103,9 +128,7 @@ public class InvseeCommand implements CommandExecutor, Listener {
 
     @EventHandler
     public void onInventoryClick(InventoryClickEvent event) {
-        if (!(event.getWhoClicked() instanceof Player)) return;
-        Player admin = (Player) event.getWhoClicked();
-
+        if (!(event.getWhoClicked() instanceof Player admin)) return;
         if (!activeSessions.containsKey(admin.getUniqueId())) return;
 
         UUID targetUUID = activeSessions.get(admin.getUniqueId());
@@ -113,23 +136,22 @@ public class InvseeCommand implements CommandExecutor, Listener {
 
         if (target == null || !target.isOnline()) {
             admin.closeInventory();
-            admin.sendMessage(ChatColor.RED + "Target player logged off.");
+            admin.sendMessage(Component.text("Target player logged off.", NamedTextColor.RED));
             return;
         }
 
-        int slot = event.getRawSlot();
-
         // Prevent clicking filler items
-        if (event.getCurrentItem() != null &&
-            event.getCurrentItem().getType() == Material.GRAY_STAINED_GLASS_PANE &&
-            event.getCurrentItem().hasItemMeta() &&
-            " ".equals(event.getCurrentItem().getItemMeta().getDisplayName())) {
+        ItemStack currentItem = event.getCurrentItem();
+        if (currentItem != null
+                && currentItem.getType() == FILLER_MATERIAL
+                && currentItem.hasItemMeta()
+                && FILLER_NAME.equals(currentItem.getItemMeta().displayName())) {
             event.setCancelled(true);
             return;
         }
 
         // Sync changes back to target inventory shortly after click
-        Bukkit.getScheduler().runTask(GmsePlugin.getPlugin(GmsePlugin.class), () -> {
+        Bukkit.getScheduler().runTask(plugin, () -> {
             PlayerInventory targetInv = target.getInventory();
             Inventory top = event.getInventory();
 
@@ -145,7 +167,7 @@ public class InvseeCommand implements CommandExecutor, Listener {
             targetInv.setBoots(top.getItem(51));
 
             ItemStack offhandCandidate = top.getItem(52);
-            if (offhandCandidate != null && offhandCandidate.getType() != Material.GRAY_STAINED_GLASS_PANE) {
+            if (offhandCandidate != null && offhandCandidate.getType() != FILLER_MATERIAL) {
                 targetInv.setItemInOffHand(offhandCandidate);
             } else if (offhandCandidate == null) {
                 targetInv.setItemInOffHand(null);
@@ -155,8 +177,8 @@ public class InvseeCommand implements CommandExecutor, Listener {
 
     @EventHandler
     public void onInventoryClose(InventoryCloseEvent event) {
-        if (event.getPlayer() instanceof Player) {
-            activeSessions.remove(event.getPlayer().getUniqueId());
+        if (event.getPlayer() instanceof Player player) {
+            activeSessions.remove(player.getUniqueId());
         }
     }
 }

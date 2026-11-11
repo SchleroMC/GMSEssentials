@@ -8,53 +8,60 @@ import com.schlero.gmsessentials.commands.HomeCommand;
 import com.schlero.gmsessentials.commands.InvseeCommand;
 import com.schlero.gmsessentials.commands.SizeCommand;
 import com.schlero.gmsessentials.commands.TPASystem;
+import org.bukkit.GameMode;
 import org.bukkit.plugin.java.JavaPlugin;
 
 public class GmsePlugin extends JavaPlugin {
 
-    public static final String PREFIX = "§6[GMSE] §r";
+    private HomeManager homeManager;
 
     @Override
     public void onEnable() {
         saveDefaultConfig();
+        homeManager = new HomeManager(this);
 
-        // Register Command Executors
-        getCommand("size").setExecutor(new SizeCommand());
+        // Commands are registered with Paper's Brigadier API instead of plugin.yml.
+        registerCommand("size", "Change a player's scale attribute.", new SizeCommand());
 
-        GamemodeCommand gmCmd = new GamemodeCommand();
-        getCommand("gms").setExecutor(gmCmd);
-        getCommand("gmc").setExecutor(gmCmd);
-        getCommand("gma").setExecutor(gmCmd);
-        getCommand("gmsp").setExecutor(gmCmd);
+        registerCommand("gms", "Shortcut for Survival mode.", new GamemodeCommand(GameMode.SURVIVAL, "Survival"));
+        registerCommand("gmc", "Shortcut for Creative mode.", new GamemodeCommand(GameMode.CREATIVE, "Creative"));
+        registerCommand("gma", "Shortcut for Adventure mode.", new GamemodeCommand(GameMode.ADVENTURE, "Adventure"));
+        registerCommand("gmsp", "Shortcut for Spectator mode.", new GamemodeCommand(GameMode.SPECTATOR, "Spectator"));
 
-        HomeCommand homeCmd = new HomeCommand(this);
-        getCommand("sethome").setExecutor(homeCmd);
-        getCommand("home").setExecutor(homeCmd);
+        HomeCommand homeCommand = new HomeCommand(this);
+        registerCommand("sethome", "Sets your home location.", (source, args) -> homeCommand.setHome(source));
+        registerCommand("home", "Teleports you to your home location.", (source, args) -> homeCommand.teleportHome(source));
 
-        InvseeCommand invseeCmd = new InvseeCommand();
-        getCommand("invsee").setExecutor(invseeCmd);
-        getServer().getPluginManager().registerEvents(invseeCmd, this);
+        InvseeCommand invseeCommand = new InvseeCommand(this);
+        registerCommand("invsee", "Inspect and manage another player's inventory.", invseeCommand);
+        getServer().getPluginManager().registerEvents(invseeCommand, this);
 
-        getCommand("fly").setExecutor(new FlyCommand());
+        registerCommand("fly", "Toggle fly ability for yourself or another player.", new FlyCommand());
 
-        BackCommand backCmd = new BackCommand(this);
-        getCommand("back").setExecutor(backCmd);
-        getServer().getPluginManager().registerEvents(backCmd, this);
+        BackCommand backCommand = new BackCommand(this);
+        registerCommand("back", "Teleports you to your last death location.", backCommand);
+        getServer().getPluginManager().registerEvents(backCommand, this);
 
-        getCommand("gmse").setExecutor(new GmseCommand(this));
+        registerCommand("gmse", "GMSEssentials management command.", new GmseCommand(this));
 
         TPASystem tpaSystem = new TPASystem(this);
-        getCommand("tpa").setExecutor(tpaSystem);
-        getCommand("tpahere").setExecutor(tpaSystem);
-        getCommand("tpaccept").setExecutor(tpaSystem);
-        getCommand("tpacancel").setExecutor(tpaSystem);
+        registerCommand("tpa", "Request to teleport to another player.", tpaSystem.command(TPASystem.Action.TPA));
+        registerCommand("tpahere", "Request that another player teleports to you.", tpaSystem.command(TPASystem.Action.TPAHERE));
+        registerCommand("tpaccept", "Accept a pending teleport request.", tpaSystem.command(TPASystem.Action.ACCEPT));
+        registerCommand("tpacancel", "Cancel a pending teleport request.", tpaSystem.command(TPASystem.Action.CANCEL));
 
         getLogger().info("GMSEssentials has been enabled!");
     }
 
     @Override
     public void onDisable() {
-        saveConfig();
+        if (homeManager != null) {
+            homeManager.save();
+        }
         getLogger().info("GMSEssentials has been disabled!");
+    }
+
+    public HomeManager getHomeManager() {
+        return homeManager;
     }
 }

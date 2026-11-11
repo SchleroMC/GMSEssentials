@@ -1,12 +1,16 @@
 package com.schlero.gmsessentials.commands;
 
 import com.schlero.gmsessentials.GmsePlugin;
-import org.bukkit.ChatColor;
-import org.bukkit.command.Command;
-import org.bukkit.command.CommandExecutor;
+import io.papermc.paper.command.brigadier.BasicCommand;
+import io.papermc.paper.command.brigadier.CommandSourceStack;
+import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.format.NamedTextColor;
 import org.bukkit.command.CommandSender;
 
-public class GmseCommand implements CommandExecutor {
+import java.util.Collection;
+import java.util.Collections;
+
+public class GmseCommand implements BasicCommand {
 
     private final GmsePlugin plugin;
 
@@ -15,19 +19,34 @@ public class GmseCommand implements CommandExecutor {
     }
 
     @Override
-    public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
+    public void execute(CommandSourceStack source, String[] args) {
+        CommandSender sender = source.getSender();
+
         if (args.length == 0) {
-            sender.sendMessage(ChatColor.WHITE + "Usage: /gmse reload");
-            return true;
+            sender.sendMessage(Component.text("Usage: /gmse reload", NamedTextColor.WHITE));
+            return;
         }
 
         if (args[0].equalsIgnoreCase("reload")) {
             plugin.reloadConfig();
-            sender.sendMessage(ChatColor.WHITE + "GMSEssentials configuration reloaded.");
-            return true;
+            plugin.getHomeManager().reload();
+            sender.sendMessage(Component.text("GMSEssentials configuration reloaded.", NamedTextColor.WHITE));
+            return;
         }
 
-        sender.sendMessage(ChatColor.WHITE + "Usage: /gmse reload");
-        return true;
+        sender.sendMessage(Component.text("Usage: /gmse reload", NamedTextColor.WHITE));
+    }
+
+    @Override
+    public Collection<String> suggest(CommandSourceStack source, String[] args) {
+        if (args.length <= 1) {
+            return CommandSuggestions.options(args, "reload");
+        }
+        return Collections.emptyList();
+    }
+
+    @Override
+    public String permission() {
+        return "gmse.admin";
     }
 }

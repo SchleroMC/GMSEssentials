@@ -1,12 +1,13 @@
 package com.schlero.gmsessentials.commands;
 
 import com.schlero.gmsessentials.GmsePlugin;
-import org.bukkit.ChatColor;
+import io.papermc.paper.command.brigadier.BasicCommand;
+import io.papermc.paper.command.brigadier.CommandSourceStack;
+import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.format.NamedTextColor;
+import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
 import org.bukkit.Location;
 import org.bukkit.Sound;
-import org.bukkit.command.Command;
-import org.bukkit.command.CommandExecutor;
-import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
@@ -16,7 +17,9 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
 
-public class BackCommand implements CommandExecutor, Listener {
+public class BackCommand implements BasicCommand, Listener {
+
+    private static final LegacyComponentSerializer LEGACY_AMPERSAND = LegacyComponentSerializer.legacyAmpersand();
 
     private final GmsePlugin plugin;
     private final Map<UUID, Location> deathLocations = new HashMap<>();
@@ -27,44 +30,47 @@ public class BackCommand implements CommandExecutor, Listener {
 
     @EventHandler
     public void onPlayerDeath(PlayerDeathEvent event) {
-        Player p = event.getEntity();
-        Location deathLoc = p.getLocation();
-        deathLocations.put(p.getUniqueId(), deathLoc);
+        Player player = event.getEntity();
+        Location deathLocation = player.getLocation();
+        deathLocations.put(player.getUniqueId(), deathLocation);
 
-        String coords = formatCoords(deathLoc);
+        String coords = formatCoords(deathLocation);
 
         String message = plugin.getConfig().getString(
                 "messages.death-message",
                 "You died at {coords}. Type /back to teleport to your death coordinates."
         );
+        if (message == null) {
+            message = "You died at {coords}. Type /back to teleport to your death coordinates.";
+        }
 
-        message = ChatColor.translateAlternateColorCodes('&', message.replace("{coords}", coords));
-        p.sendMessage(message);
+        player.sendMessage(LEGACY_AMPERSAND.deserialize(message.replace("{coords}", coords)));
     }
 
     @Override
-    public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
-        if (!(sender instanceof Player)) {
-            sender.sendMessage(ChatColor.RED + "Only players can use this command.");
-            return true;
+    public void execute(CommandSourceStack source, String[] args) {
+        if (!(source.getSender() instanceof Player player)) {
+            source.getSender().sendMessage(Component.text("Only players can use this command.", NamedTextColor.RED));
+            return;
         }
 
-        Player p = (Player) sender;
-        Location deathLoc = deathLocations.get(p.getUniqueId());
-
-        if (deathLoc == null) {
-            p.sendMessage(ChatColor.RED + "You have no death location to teleport to.");
-            return true;
+        Location deathLocation = deathLocations.get(player.getUniqueId());
+        if (deathLocation == null) {
+            player.sendMessage(Component.text("You have no death location to teleport to.", NamedTextColor.RED));
+            return;
         }
 
-        p.teleport(deathLoc);
-        p.playSound(p.getLocation(), Sound.ENTITY_ENDERMAN_TELEPORT, 1.0f, 1.0f);
-        p.sendMessage(ChatColor.WHITE + "Teleported to your death location.");
-
-        return true;
+        player.teleportAsync(deathLocation).thenAccept(success -> {
+            if (success) {
+                player.playSound(player.getLocation(), Sound.ENTITY_ENDERMAN_TELEPORT, 1.0f, 1.0f);
+                player.sendMessage(Component.text("Teleported to your death location.", NamedTextColor.WHITE));
+            } else {
+                player.sendMessage(Component.text("Could not teleport you to your death location.", NamedTextColor.RED));
+            }
+        });
     }
 
-    private String formatCoords(Location loc) {
-        return String.format("%.0f, %.0f, %.0f", loc.getX(), loc.getY(), loc.getZ());
+    private String formatCoords(Location location) {
+        return String.format("%.0f, %.0f, %.0f", location.getX(), location.getY(), location.getZ());
     }
 }

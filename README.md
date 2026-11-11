@@ -2,7 +2,7 @@
   <img src="/github/logo.png" alt="GMSEssentials Logo" width="800">
 </p>
 
-**GMSEssentials** is a lightweight, high-performance alternative to EssentialsX for modern Minecraft servers. Designed with clean features in mind, it provides essential player commands, teleportation systems, homes, and utility tools for admins—without the bloated feature set.
+**GMSEssentials** is a lightweight, high-performance alternative to EssentialsX for modern Paper servers. Designed with clean features in mind, it provides essential player commands, teleportation systems, homes, and utility tools for admins—without the bloated feature set.
 
 ## ✨ Features
 
@@ -17,6 +17,8 @@
 * **Admin Utilities**: Inventory inspection (`/invsee`), flight controls (`/fly`), and dynamic player resizing (`/size`).
 
 ## 📥 Installation
+
+**Requirements:** Paper 26.1+ and Java 25+. This is a native Paper plugin (using `paper-plugin.yml` and Paper's Brigadier command API), so it will not load on Spigot or Bukkit.
 
 1. Download the latest `GMSEssentials.jar` release.
 
@@ -66,19 +68,22 @@
 
 * `gmse.admin` — Grants access to `/invsee`, `/fly`, `/size`, and target parameters for gamemode commands.
 
-## ⚙️ Configuration (`config.yml`)
+## ⚙️ Configuration
+
+### `config.yml`
 
 ```yaml
-# GMSurvivors Essentials Configuration
-# Player home locations will automatically save below.
-homes: {}
+# GMSEssentials Configuration
 
 messages:
   # {coords} is replaced with the player's death coordinates (x, y, z).
   # '&' color codes are supported.
   death-message: "You died at {coords}. Type /back to teleport to your death coordinates."
-
 ```
+
+### `homes.yml`
+
+Saved homes are stored separately in `plugins/GMSEssentials/homes.yml`, keyed by player UUID. This file is managed automatically; you do not need to edit it by hand.
 
 ## 🤝 Contributing & Support
 
