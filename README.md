@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="/github/logo.png" alt="GMSEssentials Logo" width="800">
+  <img src="/.github/logo.png" alt="GMSEssentials Logo" width="800">
 </p>
 
 **GMSEssentials** is a lightweight, high-performance alternative to EssentialsX for modern Paper servers. Designed with clean features in mind, it provides essential player commands, teleportation systems, homes, and utility tools for admins—without the bloated feature set.
