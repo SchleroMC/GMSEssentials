@@ -1,9 +1,9 @@
 package com.schlero.gmsessentials.commands;
 
+import com.schlero.gmsessentials.GmsePlugin;
+import com.schlero.gmsessentials.Messages;
 import io.papermc.paper.command.brigadier.BasicCommand;
 import io.papermc.paper.command.brigadier.CommandSourceStack;
-import net.kyori.adventure.text.Component;
-import net.kyori.adventure.text.format.NamedTextColor;
 import org.bukkit.Bukkit;
 import org.bukkit.attribute.Attribute;
 import org.bukkit.attribute.AttributeInstance;
@@ -15,12 +15,18 @@ import java.util.Collections;
 
 public class SizeCommand implements BasicCommand {
 
+    private final Messages messages;
+
+    public SizeCommand(GmsePlugin plugin) {
+        this.messages = plugin.getMessages();
+    }
+
     @Override
     public void execute(CommandSourceStack source, String[] args) {
         CommandSender sender = source.getSender();
 
         if (args.length == 0) {
-            sender.sendMessage(Component.text("Usage: /size [player] <scale> OR /size <scale>", NamedTextColor.RED));
+            sender.sendMessage(messages.get("size.usage"));
             return;
         }
 
@@ -29,40 +35,40 @@ public class SizeCommand implements BasicCommand {
 
         if (args.length == 1) {
             if (!(sender instanceof Player player)) {
-                sender.sendMessage(Component.text("Console must specify a player: /size <player> <scale>", NamedTextColor.RED));
+                sender.sendMessage(messages.get("size.console-usage"));
                 return;
             }
             target = player;
             try {
                 scale = Double.parseDouble(args[0]);
             } catch (NumberFormatException e) {
-                sender.sendMessage(Component.text("Invalid number format.", NamedTextColor.RED));
+                sender.sendMessage(messages.get("generic.invalid-number"));
                 return;
             }
         } else {
             target = Bukkit.getPlayerExact(args[0]);
             if (target == null) {
-                sender.sendMessage(Component.text("Player not found.", NamedTextColor.RED));
+                sender.sendMessage(messages.get("generic.player-not-found"));
                 return;
             }
             try {
                 scale = Double.parseDouble(args[1]);
             } catch (NumberFormatException e) {
-                sender.sendMessage(Component.text("Invalid number format.", NamedTextColor.RED));
+                sender.sendMessage(messages.get("generic.invalid-number"));
                 return;
             }
         }
 
         AttributeInstance attribute = target.getAttribute(Attribute.SCALE);
         if (attribute == null) {
-            sender.sendMessage(Component.text("Scale attribute is not supported on this entity.", NamedTextColor.RED));
+            sender.sendMessage(messages.get("size.unsupported"));
             return;
         }
 
         attribute.setBaseValue(scale);
-        sender.sendMessage(Component.text("Set " + target.getName() + "'s scale to " + scale, NamedTextColor.WHITE));
+        sender.sendMessage(messages.get("size.set-other", "player", target.getName(), "scale", scale));
         if (!sender.equals(target)) {
-            target.sendMessage(Component.text("Your scale was set to " + scale, NamedTextColor.WHITE));
+            target.sendMessage(messages.get("size.set-self", "scale", scale));
         }
     }
 

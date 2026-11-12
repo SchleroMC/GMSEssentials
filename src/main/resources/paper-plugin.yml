@@ -8,3 +8,18 @@ permissions:
   gmse.admin:
     description: Allows access to administrative commands in GMSEssentials.
     default: op
+  gmse.home:
+    description: Allows use of /sethome, /home, /delhome and /homes.
+    default: true
+  gmse.back:
+    description: Allows use of /back.
+    default: true
+  gmse.tpa:
+    description: Allows use of /tpa, /tpahere, /tpaccept, /tpacancel and /tpdeny.
+    default: true
+  gmse.echest:
+    description: Allows use of /echest.
+    default: true
+  gmse.workbench:
+    description: Allows use of /workbench.
+    default: true

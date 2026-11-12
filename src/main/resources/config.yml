@@ -1,6 +1,91 @@
 # GMSEssentials Configuration
+#
+# Run /gmse reload after editing this file to apply your changes.
 
+homes:
+  # The maximum number of named homes a player can set with /sethome.
+  max-homes: 3
+
+# Every player-facing message the plugin sends can be customized below.
+# '&' color codes are supported (e.g. &a for green, &c for red).
 messages:
-  # {coords} is replaced with the player's death coordinates (x, y, z).
-  # '&' color codes are supported.
-  death-message: "You died at {coords}. Type /back to teleport to your death coordinates."
+
+  # Shared messages used across multiple commands.
+  generic:
+    players-only: "&cOnly players can use this command."
+    console-must-specify-player: "&cConsole must specify a player."
+    player-not-found: "&cPlayer not found."
+    invalid-number: "&cInvalid number format."
+
+  # /gms, /gmc, /gma, /gmsp
+  gamemode:
+    set-other: "Set {player}'s gamemode to {mode}."
+    set-self: "Your game mode was updated to {mode}."
+
+  # /size
+  size:
+    usage: "&cUsage: /size [player] <scale> OR /size <scale>"
+    console-usage: "&cConsole must specify a player: /size <player> <scale>"
+    unsupported: "&cScale attribute is not supported on this entity."
+    set-other: "Set {player}'s scale to {scale}"
+    set-self: "Your scale was set to {scale}"
+
+  # /fly
+  fly:
+    enabled-other: "Fly enabled for {player}."
+    disabled-other: "Fly disabled for {player}."
+    enabled-self: "Your fly ability was enabled."
+    disabled-self: "Your fly ability was disabled."
+
+  # /sethome, /home, /delhome, /homes
+  home:
+    players-only: "&cOnly players can use home commands."
+    saved: "Home '{name}' saved successfully."
+    not-set: "&cYou have not set a home yet! Use /sethome."
+    not-found: "&cYou have no home named '{name}'."
+    max-reached: "&cYou have reached the maximum of {max} homes. Delete one with /delhome <name> first."
+    teleported: "Teleported to home '{name}'."
+    teleport-failed: "&cCould not teleport you to that home."
+    deleted: "Deleted home '{name}'."
+    delhome-usage: "&cUsage: /delhome <name>"
+    list-empty: "&cYou have no homes set. Use /sethome [name] to create one."
+    list-header: "Your homes ({count}/{max}):"
+    list-entry: " - {name}"
+
+  # /back and the on-death notice
+  back:
+    # {coords} is replaced with the player's death coordinates (x, y, z).
+    death-message: "You died at {coords}. Type /back to teleport to your death coordinates."
+    no-death-location: "&cYou have no death location to teleport to."
+    teleported: "Teleported to your death location."
+    teleport-failed: "&cCould not teleport you to your death location."
+
+  # /tpa, /tpahere, /tpaccept, /tpacancel
+  tpa:
+    usage: "Usage: /{command} <player>"
+    self-request: "&cYou cannot send a teleport request to yourself."
+    sent: "Teleport request sent to {player}."
+    received-tpa: "{player} has requested to teleport to you. Type /tpaccept or /tpacancel."
+    received-tpahere: "{player} has requested that you teleport to them. Type /tpaccept or /tpacancel."
+    expired-requester: "Your teleport request to {player} has expired."
+    expired-target: "The teleport request from {player} has expired."
+    none-pending: "&cYou have no pending teleport requests."
+    player-offline: "&cThat player is no longer online."
+    accepted-target: "Teleport request accepted."
+    accepted-requester: "{player} accepted your teleport request."
+    cancelled-target: "Teleport request cancelled."
+    cancelled-requester: "{player} cancelled your teleport request."
+    denied-target: "Teleport request denied."
+    denied-requester: "{player} denied your teleport request."
+
+  # /gmse reload
+  gmse:
+    usage: "Usage: /gmse reload"
+    reloaded: "GMSEssentials configuration reloaded."
+
+  # /invsee
+  invsee:
+    players-only: "&cOnly players can use /invsee."
+    usage: "&cUsage: /invsee <player>"
+    cannot-invsee-self: "&cYou cannot invsee yourself."
+    target-logged-off: "&cTarget player logged off."

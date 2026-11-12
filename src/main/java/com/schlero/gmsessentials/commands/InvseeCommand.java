@@ -1,10 +1,10 @@
 package com.schlero.gmsessentials.commands;
 
 import com.schlero.gmsessentials.GmsePlugin;
+import com.schlero.gmsessentials.Messages;
 import io.papermc.paper.command.brigadier.BasicCommand;
 import io.papermc.paper.command.brigadier.CommandSourceStack;
 import net.kyori.adventure.text.Component;
-import net.kyori.adventure.text.format.NamedTextColor;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.command.CommandSender;
@@ -30,11 +30,13 @@ public class InvseeCommand implements BasicCommand, Listener {
     private static final Component FILLER_NAME = Component.text(" ");
 
     private final GmsePlugin plugin;
+    private final Messages messages;
     // Track active Invsee sessions: Admin UUID -> Target UUID
     private final Map<UUID, UUID> activeSessions = new HashMap<>();
 
     public InvseeCommand(GmsePlugin plugin) {
         this.plugin = plugin;
+        this.messages = plugin.getMessages();
     }
 
     @Override
@@ -42,24 +44,24 @@ public class InvseeCommand implements BasicCommand, Listener {
         CommandSender sender = source.getSender();
 
         if (!(sender instanceof Player admin)) {
-            sender.sendMessage(Component.text("Only players can use /invsee.", NamedTextColor.RED));
+            sender.sendMessage(messages.get("invsee.players-only"));
             return;
         }
 
         if (args.length == 0) {
-            admin.sendMessage(Component.text("Usage: /invsee <player>", NamedTextColor.RED));
+            admin.sendMessage(messages.get("invsee.usage"));
             return;
         }
 
         Player target = Bukkit.getPlayerExact(args[0]);
 
         if (target == null) {
-            admin.sendMessage(Component.text("Player not found.", NamedTextColor.RED));
+            admin.sendMessage(messages.get("generic.player-not-found"));
             return;
         }
 
         if (target.equals(admin)) {
-            admin.sendMessage(Component.text("You cannot invsee yourself.", NamedTextColor.RED));
+            admin.sendMessage(messages.get("invsee.cannot-invsee-self"));
             return;
         }
 
@@ -136,7 +138,7 @@ public class InvseeCommand implements BasicCommand, Listener {
 
         if (target == null || !target.isOnline()) {
             admin.closeInventory();
-            admin.sendMessage(Component.text("Target player logged off.", NamedTextColor.RED));
+            admin.sendMessage(messages.get("invsee.target-logged-off"));
             return;
         }
 

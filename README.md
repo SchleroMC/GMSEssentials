@@ -34,11 +34,12 @@
 
 | Command | Description | Permission | 
  | ----- | ----- | ----- | 
-| `/tpa <player>` | Send a request to teleport to a player | `No permission required` | 
-| `/tpahere <player>` | Request a player to teleport to you | `No permission required` | 
-| `/tpaccept` | Accept an incoming teleport request | `No permission required` | 
-| `/tpacancel` | Cancel an outgoing teleport request | `No permission required` | 
-| `/back` | Teleport back to your last death location | `No permission required` | 
+| `/tpa <player>` | Send a request to teleport to a player | `gmse.tpa` | 
+| `/tpahere <player>` | Request a player to teleport to you | `gmse.tpa` | 
+| `/tpaccept` | Accept an incoming teleport request | `gmse.tpa` | 
+| `/tpacancel` | Cancel a pending teleport request you've received | `gmse.tpa` | 
+| `/tpdeny` | Deny a pending teleport request you've received | `gmse.tpa` | 
+| `/back` | Teleport back to your last death location | `gmse.back` | 
 
 ### 🎮 Gamemode Shortcuts
 
@@ -53,8 +54,11 @@
 
 | Command | Description | Permission | 
  | ----- | ----- | ----- | 
-| `/sethome [name]` | Save your current location as a home | `No permission required` | 
-| `/home [name]` | Teleport to a saved home location | `No permission required` | 
+| `/sethome [name]` | Save your current location as a home (up to `homes.max-homes`, default 3) | `gmse.home` | 
+| `/home [name]` | Teleport to a saved home location | `gmse.home` | 
+| `/delhome <name>` | Delete a saved home | `gmse.home` | 
+| `/homes` | List your saved homes | `gmse.home` | 
+| `/echest` | Open your own ender chest | `gmse.echest` | 
 
 ### 🛠️ Admin Utilities
 
@@ -63,27 +67,42 @@
 | `/invsee <player>` | View and manage a player's inventory | `gmse.admin` | 
 | `/fly [player]` | Toggle flight mode for yourself or others | `gmse.admin` | 
 | `/size <player> <scale>` | Change a player's scale attribute *(1.20.5+)* | `gmse.admin` | 
+| `/workbench` | Open a portable crafting table | `gmse.workbench` | 
 
 ## 🔑 Master Permissions
 
-* `gmse.admin` — Grants access to `/invsee`, `/fly`, `/size`, and target parameters for gamemode commands.
+* `gmse.admin` — Grants access to `/invsee`, `/fly`, `/size`, `/gmse reload`, and the gamemode commands.
+* `gmse.home` — `/sethome`, `/home`, `/delhome`, `/homes` *(default: everyone)*
+* `gmse.back` — `/back` *(default: everyone)*
+* `gmse.tpa` — `/tpa`, `/tpahere`, `/tpaccept`, `/tpacancel`, `/tpdeny` *(default: everyone)*
+* `gmse.echest` — `/echest` *(default: everyone)*
+* `gmse.workbench` — `/workbench` *(default: everyone)*
+
+Revoke any of these with a permissions plugin like LuckPerms to restrict a feature.
 
 ## ⚙️ Configuration
 
 ### `config.yml`
 
 ```yaml
-# GMSEssentials Configuration
+homes:
+  # The maximum number of named homes a player can set with /sethome.
+  max-homes: 3
+```
 
+Every player-facing message the plugin sends is also customizable here, grouped under `messages:` by the command it belongs to (`generic`, `gamemode`, `size`, `fly`, `home`, `back`, `tpa`, `gmse`, `invsee`). `'&'` color codes are supported, and messages like `back.death-message` and `home.saved` support `{placeholder}` substitution (see the comments in the shipped file for which placeholders each message supports). Run `/gmse reload` after editing to apply your changes without restarting.
+
+```yaml
 messages:
-  # {coords} is replaced with the player's death coordinates (x, y, z).
-  # '&' color codes are supported.
-  death-message: "You died at {coords}. Type /back to teleport to your death coordinates."
+  home:
+    saved: "Home '{name}' saved successfully."
+    teleported: "Teleported to home '{name}'."
+    # ...and so on for every other message. See the full config.yml for the complete list.
 ```
 
 ### `homes.yml`
 
-Saved homes are stored separately in `plugins/GMSEssentials/homes.yml`, keyed by player UUID. This file is managed automatically; you do not need to edit it by hand.
+Saved homes are stored separately in `plugins/GMSEssentials/homes.yml`, keyed by player UUID and then by home name. This file is managed automatically; you do not need to edit it by hand.
 
 ## 🤝 Contributing & Support
 

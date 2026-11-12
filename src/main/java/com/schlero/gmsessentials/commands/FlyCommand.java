@@ -1,9 +1,9 @@
 package com.schlero.gmsessentials.commands;
 
+import com.schlero.gmsessentials.GmsePlugin;
+import com.schlero.gmsessentials.Messages;
 import io.papermc.paper.command.brigadier.BasicCommand;
 import io.papermc.paper.command.brigadier.CommandSourceStack;
-import net.kyori.adventure.text.Component;
-import net.kyori.adventure.text.format.NamedTextColor;
 import org.bukkit.Bukkit;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
@@ -13,6 +13,12 @@ import java.util.Collections;
 
 public class FlyCommand implements BasicCommand {
 
+    private final Messages messages;
+
+    public FlyCommand(GmsePlugin plugin) {
+        this.messages = plugin.getMessages();
+    }
+
     @Override
     public void execute(CommandSourceStack source, String[] args) {
         CommandSender sender = source.getSender();
@@ -20,14 +26,14 @@ public class FlyCommand implements BasicCommand {
 
         if (args.length == 0) {
             if (!(sender instanceof Player player)) {
-                sender.sendMessage(Component.text("Console must specify a player.", NamedTextColor.RED));
+                sender.sendMessage(messages.get("generic.console-must-specify-player"));
                 return;
             }
             target = player;
         } else {
             target = Bukkit.getPlayerExact(args[0]);
             if (target == null) {
-                sender.sendMessage(Component.text("Player not found.", NamedTextColor.RED));
+                sender.sendMessage(messages.get("generic.player-not-found"));
                 return;
             }
         }
@@ -39,11 +45,9 @@ public class FlyCommand implements BasicCommand {
             target.setFlying(false);
         }
 
-        String status = newState ? "enabled" : "disabled";
-
-        sender.sendMessage(Component.text("Fly " + status + " for " + target.getName() + ".", NamedTextColor.WHITE));
+        sender.sendMessage(messages.get(newState ? "fly.enabled-other" : "fly.disabled-other", "player", target.getName()));
         if (!sender.equals(target)) {
-            target.sendMessage(Component.text("Your fly ability was " + status + ".", NamedTextColor.WHITE));
+            target.sendMessage(messages.get(newState ? "fly.enabled-self" : "fly.disabled-self"));
         }
     }
 

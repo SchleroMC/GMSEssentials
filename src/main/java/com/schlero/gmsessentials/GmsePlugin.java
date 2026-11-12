@@ -1,6 +1,7 @@
 package com.schlero.gmsessentials;
 
 import com.schlero.gmsessentials.commands.BackCommand;
+import com.schlero.gmsessentials.commands.EchestCommand;
 import com.schlero.gmsessentials.commands.FlyCommand;
 import com.schlero.gmsessentials.commands.GamemodeCommand;
 import com.schlero.gmsessentials.commands.GmseCommand;
@@ -8,35 +9,44 @@ import com.schlero.gmsessentials.commands.HomeCommand;
 import com.schlero.gmsessentials.commands.InvseeCommand;
 import com.schlero.gmsessentials.commands.SizeCommand;
 import com.schlero.gmsessentials.commands.TPASystem;
+import com.schlero.gmsessentials.commands.WorkbenchCommand;
 import org.bukkit.GameMode;
 import org.bukkit.plugin.java.JavaPlugin;
 
 public class GmsePlugin extends JavaPlugin {
 
     private HomeManager homeManager;
+    private Messages messages;
 
     @Override
     public void onEnable() {
         saveDefaultConfig();
         homeManager = new HomeManager(this);
+        messages = new Messages(this);
 
         // Commands are registered with Paper's Brigadier API instead of plugin.yml.
-        registerCommand("size", "Change a player's scale attribute.", new SizeCommand());
+        registerCommand("size", "Change a player's scale attribute.", new SizeCommand(this));
 
-        registerCommand("gms", "Shortcut for Survival mode.", new GamemodeCommand(GameMode.SURVIVAL, "Survival"));
-        registerCommand("gmc", "Shortcut for Creative mode.", new GamemodeCommand(GameMode.CREATIVE, "Creative"));
-        registerCommand("gma", "Shortcut for Adventure mode.", new GamemodeCommand(GameMode.ADVENTURE, "Adventure"));
-        registerCommand("gmsp", "Shortcut for Spectator mode.", new GamemodeCommand(GameMode.SPECTATOR, "Spectator"));
+        registerCommand("gms", "Shortcut for Survival mode.", new GamemodeCommand(this, GameMode.SURVIVAL, "Survival"));
+        registerCommand("gmc", "Shortcut for Creative mode.", new GamemodeCommand(this, GameMode.CREATIVE, "Creative"));
+        registerCommand("gma", "Shortcut for Adventure mode.", new GamemodeCommand(this, GameMode.ADVENTURE, "Adventure"));
+        registerCommand("gmsp", "Shortcut for Spectator mode.", new GamemodeCommand(this, GameMode.SPECTATOR, "Spectator"));
 
         HomeCommand homeCommand = new HomeCommand(this);
-        registerCommand("sethome", "Sets your home location.", (source, args) -> homeCommand.setHome(source));
-        registerCommand("home", "Teleports you to your home location.", (source, args) -> homeCommand.teleportHome(source));
+        registerCommand("sethome", "Sets a home location.", homeCommand.setHomeCommand());
+        registerCommand("home", "Teleports you to a home location.", homeCommand.homeCommand());
+        registerCommand("delhome", "Deletes a home location.", homeCommand.delHomeCommand());
+        registerCommand("homes", "Lists your saved home locations.", homeCommand.listHomesCommand());
 
         InvseeCommand invseeCommand = new InvseeCommand(this);
         registerCommand("invsee", "Inspect and manage another player's inventory.", invseeCommand);
         getServer().getPluginManager().registerEvents(invseeCommand, this);
 
-        registerCommand("fly", "Toggle fly ability for yourself or another player.", new FlyCommand());
+        registerCommand("fly", "Toggle fly ability for yourself or another player.", new FlyCommand(this));
+
+        registerCommand("echest", "Open your own ender chest.", new EchestCommand(this));
+
+        registerCommand("workbench", "Open a portable crafting table.", new WorkbenchCommand(this));
 
         BackCommand backCommand = new BackCommand(this);
         registerCommand("back", "Teleports you to your last death location.", backCommand);
@@ -49,6 +59,7 @@ public class GmsePlugin extends JavaPlugin {
         registerCommand("tpahere", "Request that another player teleports to you.", tpaSystem.command(TPASystem.Action.TPAHERE));
         registerCommand("tpaccept", "Accept a pending teleport request.", tpaSystem.command(TPASystem.Action.ACCEPT));
         registerCommand("tpacancel", "Cancel a pending teleport request.", tpaSystem.command(TPASystem.Action.CANCEL));
+        registerCommand("tpdeny", "Deny a pending teleport request.", tpaSystem.command(TPASystem.Action.DENY));
 
         getLogger().info("GMSEssentials has been enabled!");
     }
@@ -63,5 +74,9 @@ public class GmsePlugin extends JavaPlugin {
 
     public HomeManager getHomeManager() {
         return homeManager;
+    }
+
+    public Messages getMessages() {
+        return messages;
     }
 }
