@@ -29,6 +29,7 @@ public class Messages {
         defaults.put("generic.console-must-specify-player", "&cConsole must specify a player.");
         defaults.put("generic.player-not-found", "&cPlayer not found.");
         defaults.put("generic.invalid-number", "&cInvalid number format.");
+        defaults.put("generic.no-permission", "&cYou do not have permission to do that.");
 
         // Gamemode
         defaults.put("gamemode.set-other", "Set {player}'s gamemode to {mode}.");
@@ -88,6 +89,22 @@ public class Messages {
         defaults.put("gmse.usage", "Usage: /gmse reload");
         defaults.put("gmse.reloaded", "GMSEssentials configuration reloaded.");
 
+        // /balance, /pay, /eco
+        defaults.put("economy.disabled", "&cEconomy features are not currently enabled on this server.");
+        defaults.put("economy.balance-self", "Your balance: {amount}");
+        defaults.put("economy.balance-other", "{player}'s balance: {amount}");
+        defaults.put("economy.pay-usage", "&cUsage: /pay <player> <amount>");
+        defaults.put("economy.pay-invalid-amount", "&cEnter a valid, positive amount.");
+        defaults.put("economy.pay-self", "&cYou cannot pay yourself.");
+        defaults.put("economy.pay-insufficient-funds", "&cYou don't have enough money to send {amount}.");
+        defaults.put("economy.pay-sent", "You paid {player} {amount}.");
+        defaults.put("economy.pay-received", "{player} paid you {amount}.");
+        defaults.put("economy.eco-usage", "&cUsage: /eco <give|take|set> <player> <amount>");
+        defaults.put("economy.eco-invalid-amount", "&cEnter a valid, non-negative amount.");
+        defaults.put("economy.eco-given", "Gave {player} {amount}. New balance: {balance}");
+        defaults.put("economy.eco-taken", "Took {amount} from {player}. New balance: {balance}");
+        defaults.put("economy.eco-set", "Set {player}'s balance to {amount}.");
+
         // Invsee
         defaults.put("invsee.players-only", "&cOnly players can use /invsee.");
         defaults.put("invsee.usage", "&cUsage: /invsee <player>");
@@ -107,7 +124,16 @@ public class Messages {
         }
 
         for (int i = 0; i + 1 < placeholders.length; i += 2) {
-            raw = raw.replace("{" + placeholders[i] + "}", String.valueOf(placeholders[i + 1]));
+            String placeholderKey = String.valueOf(placeholders[i]);
+            String value = String.valueOf(placeholders[i + 1]);
+
+            // Money amounts are always highlighted green, regardless of the rest of
+            // the message's color, then reset so any trailing text isn't affected.
+            if (placeholderKey.equals("amount") || placeholderKey.equals("balance")) {
+                value = "&a" + value + "&r";
+            }
+
+            raw = raw.replace("{" + placeholderKey + "}", value);
         }
 
         return LEGACY_AMPERSAND.deserialize(raw);

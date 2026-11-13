@@ -6,6 +6,18 @@ homes:
   # The maximum number of named homes a player can set with /sethome.
   max-homes: 3
 
+economy:
+  # Whether GMSEssentials should provide its own economy (via Vault) when no other
+  # economy plugin (EssentialsX, CMI, etc.) is already registered. If another economy
+  # plugin is present, it's always used instead, regardless of this setting.
+  enabled: true
+  # Starting balance for new players, when GMSEssentials is the one providing the economy.
+  starting-balance: 100.0
+  # The symbol shown before an amount, e.g. "$100.00". Change to "€", "£", etc. as needed.
+  currency-symbol: "$"
+  currency-singular: "Dollar"
+  currency-plural: "Dollars"
+
 # Every player-facing message the plugin sends can be customized below.
 # '&' color codes are supported (e.g. &a for green, &c for red).
 messages:
@@ -16,6 +28,7 @@ messages:
     console-must-specify-player: "&cConsole must specify a player."
     player-not-found: "&cPlayer not found."
     invalid-number: "&cInvalid number format."
+    no-permission: "&cYou do not have permission to do that."
 
   # /gms, /gmc, /gma, /gmsp
   gamemode:
@@ -83,7 +96,23 @@ messages:
     usage: "Usage: /gmse reload"
     reloaded: "GMSEssentials configuration reloaded."
 
-  # /invsee
+  # /balance, /pay, /eco
+  economy:
+    disabled: "&cEconomy features are not currently enabled on this server."
+    balance-self: "Your balance: {amount}"
+    balance-other: "{player}'s balance: {amount}"
+    pay-usage: "&cUsage: /pay <player> <amount>"
+    pay-invalid-amount: "&cEnter a valid, positive amount."
+    pay-self: "&cYou cannot pay yourself."
+    pay-insufficient-funds: "&cYou don't have enough money to send {amount}."
+    pay-sent: "You paid {player} {amount}."
+    pay-received: "{player} paid you {amount}."
+    eco-usage: "&cUsage: /eco <give|take|set> <player> <amount>"
+    eco-invalid-amount: "&cEnter a valid, non-negative amount."
+    eco-given: "Gave {player} {amount}. New balance: {balance}"
+    eco-taken: "Took {amount} from {player}. New balance: {balance}"
+    eco-set: "Set {player}'s balance to {amount}."
+
   invsee:
     players-only: "&cOnly players can use /invsee."
     usage: "&cUsage: /invsee <player>"

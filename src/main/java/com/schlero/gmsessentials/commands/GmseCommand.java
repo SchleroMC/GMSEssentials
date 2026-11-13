@@ -31,6 +31,7 @@ public class GmseCommand implements BasicCommand {
         if (args[0].equalsIgnoreCase("reload")) {
             plugin.reloadConfig();
             plugin.getHomeManager().reload();
+            plugin.getEconomyManager().reload();
             sender.sendMessage(messages.get("gmse.reloaded"));
             return;
         }

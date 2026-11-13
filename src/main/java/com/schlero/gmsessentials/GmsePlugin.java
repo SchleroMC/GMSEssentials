@@ -2,6 +2,7 @@ package com.schlero.gmsessentials;
 
 import com.schlero.gmsessentials.commands.BackCommand;
 import com.schlero.gmsessentials.commands.EchestCommand;
+import com.schlero.gmsessentials.commands.EconomyCommands;
 import com.schlero.gmsessentials.commands.FlyCommand;
 import com.schlero.gmsessentials.commands.GamemodeCommand;
 import com.schlero.gmsessentials.commands.GmseCommand;
@@ -17,12 +18,14 @@ public class GmsePlugin extends JavaPlugin {
 
     private HomeManager homeManager;
     private Messages messages;
+    private EconomyManager economyManager;
 
     @Override
     public void onEnable() {
         saveDefaultConfig();
         homeManager = new HomeManager(this);
         messages = new Messages(this);
+        economyManager = new EconomyManager(this);
 
         // Commands are registered with Paper's Brigadier API instead of plugin.yml.
         registerCommand("size", "Change a player's scale attribute.", new SizeCommand(this));
@@ -61,6 +64,12 @@ public class GmsePlugin extends JavaPlugin {
         registerCommand("tpacancel", "Cancel a pending teleport request.", tpaSystem.command(TPASystem.Action.CANCEL));
         registerCommand("tpdeny", "Deny a pending teleport request.", tpaSystem.command(TPASystem.Action.DENY));
 
+        EconomyCommands economyCommands = new EconomyCommands(this);
+        registerCommand("balance", "Check your or another player's balance.", economyCommands.balanceCommand());
+        registerCommand("bal", "Check your or another player's balance.", economyCommands.balanceCommand());
+        registerCommand("pay", "Pay another player.", economyCommands.payCommand());
+        registerCommand("eco", "Give, take, or set a player's balance.", economyCommands.ecoCommand());
+
         getLogger().info("GMSEssentials has been enabled!");
     }
 
@@ -68,6 +77,9 @@ public class GmsePlugin extends JavaPlugin {
     public void onDisable() {
         if (homeManager != null) {
             homeManager.save();
+        }
+        if (economyManager != null) {
+            economyManager.save();
         }
         getLogger().info("GMSEssentials has been disabled!");
     }
@@ -78,5 +90,9 @@ public class GmsePlugin extends JavaPlugin {
 
     public Messages getMessages() {
         return messages;
+    }
+
+    public EconomyManager getEconomyManager() {
+        return economyManager;
     }
 }

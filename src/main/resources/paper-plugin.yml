@@ -3,10 +3,16 @@ version: '${project.version}'
 main: com.schlero.gmsessentials.GmsePlugin
 api-version: '26.1'
 description: A free and open source plugin that adds essential things to your server.
+dependencies:
+  server:
+    Vault:
+      load: BEFORE
+      required: false
+      join-classpath: true
 defaultPerm: OP
 permissions:
   gmse.admin:
-    description: Allows access to administrative commands in GMSEssentials.
+    description: Allows access to administrative commands in GMSEssentials, including /eco and checking others' balance with /balance.
     default: op
   gmse.home:
     description: Allows use of /sethome, /home, /delhome and /homes.
@@ -22,4 +28,10 @@ permissions:
     default: true
   gmse.workbench:
     description: Allows use of /workbench.
+    default: true
+  gmse.balance:
+    description: Allows use of /balance (own balance only; /balance <player> requires gmse.admin).
+    default: true
+  gmse.pay:
+    description: Allows use of /pay.
     default: true

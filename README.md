@@ -16,9 +16,13 @@
 
 * **Admin Utilities**: Inventory inspection (`/invsee`), flight controls (`/fly`), and dynamic player resizing (`/size`).
 
+* **Vault Integration**: Optional soft-dependency on [Vault](https://github.com/milkbowl/Vault) for economy-powered commands.
+
 ## 📥 Installation
 
 **Requirements:** Paper 26.1+ and Java 25+. This is a native Paper plugin (using `paper-plugin.yml` and Paper's Brigadier command API), so it will not load on Spigot or Bukkit.
+
+**Optional:** [Vault](https://www.spigotmc.org/resources/vault.34315/) plus any Vault-compatible economy plugin (EssentialsX Economy, CMI, etc.) if you want economy-powered commands. GMSEssentials runs fine without it — those commands simply won't be available until both are installed.
 
 1. Download the latest `GMSEssentials.jar` release.
 
@@ -69,14 +73,28 @@
 | `/size <player> <scale>` | Change a player's scale attribute *(1.20.5+)* | `gmse.admin` | 
 | `/workbench` | Open a portable crafting table | `gmse.workbench` | 
 
+### 💰 Economy
+
+Requires [Vault](https://www.spigotmc.org/resources/vault.34315/). If another economy plugin (EssentialsX, CMI, etc.) is already registered with Vault, these commands use it; otherwise GMSEssentials provides its own lightweight economy automatically (see `economy.enabled` in `config.yml`).
+
+| Command | Description | Permission | 
+ | ----- | ----- | ----- | 
+| `/balance [player]` | Check your own balance, or another player's with `gmse.admin` | `gmse.balance` | 
+| `/pay <player> <amount>` | Send money to another player | `gmse.pay` | 
+| `/eco <give\|take\|set> <player> <amount>` | Give, take, or set a player's balance | `gmse.admin` | 
+
+`/bal` works as a shorthand for `/balance`.
+
 ## 🔑 Master Permissions
 
-* `gmse.admin` — Grants access to `/invsee`, `/fly`, `/size`, `/gmse reload`, and the gamemode commands.
+* `gmse.admin` — Grants access to `/invsee`, `/fly`, `/size`, `/gmse reload`, `/eco`, checking others' balance with `/balance`, and the gamemode commands.
 * `gmse.home` — `/sethome`, `/home`, `/delhome`, `/homes` *(default: everyone)*
 * `gmse.back` — `/back` *(default: everyone)*
 * `gmse.tpa` — `/tpa`, `/tpahere`, `/tpaccept`, `/tpacancel`, `/tpdeny` *(default: everyone)*
 * `gmse.echest` — `/echest` *(default: everyone)*
 * `gmse.workbench` — `/workbench` *(default: everyone)*
+* `gmse.balance` — `/balance` on yourself *(default: everyone)*
+* `gmse.pay` — `/pay` *(default: everyone)*
 
 Revoke any of these with a permissions plugin like LuckPerms to restrict a feature.
 
@@ -88,9 +106,19 @@ Revoke any of these with a permissions plugin like LuckPerms to restrict a featu
 homes:
   # The maximum number of named homes a player can set with /sethome.
   max-homes: 3
+
+economy:
+  # Whether GMSEssentials should provide its own economy when no other economy
+  # plugin is already registered with Vault. Ignored if another one is present.
+  enabled: true
+  starting-balance: 100.0
+  # The symbol shown before an amount, e.g. "$100.00". Change to "€", "£", etc. as needed.
+  currency-symbol: "$"
+  currency-singular: "Dollar"
+  currency-plural: "Dollars"
 ```
 
-Every player-facing message the plugin sends is also customizable here, grouped under `messages:` by the command it belongs to (`generic`, `gamemode`, `size`, `fly`, `home`, `back`, `tpa`, `gmse`, `invsee`). `'&'` color codes are supported, and messages like `back.death-message` and `home.saved` support `{placeholder}` substitution (see the comments in the shipped file for which placeholders each message supports). Run `/gmse reload` after editing to apply your changes without restarting.
+Every player-facing message the plugin sends is also customizable here, grouped under `messages:` by the command it belongs to (`generic`, `gamemode`, `size`, `fly`, `home`, `back`, `tpa`, `gmse`, `economy`, `invsee`). `'&'` color codes are supported, and messages like `back.death-message` and `home.saved` support `{placeholder}` substitution (see the comments in the shipped file for which placeholders each message supports). Run `/gmse reload` after editing to apply your changes without restarting.
 
 ```yaml
 messages:
@@ -103,6 +131,10 @@ messages:
 ### `homes.yml`
 
 Saved homes are stored separately in `plugins/GMSEssentials/homes.yml`, keyed by player UUID and then by home name. This file is managed automatically; you do not need to edit it by hand.
+
+### `balances.yml`
+
+If GMSEssentials is providing its own economy (see `economy.enabled` above), player balances are stored separately in `plugins/GMSEssentials/balances.yml`, keyed by player UUID. Also managed automatically. If another economy plugin is handling the economy instead, this file isn't used.
 
 ## 🤝 Contributing & Support
 
